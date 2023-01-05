@@ -1,0 +1,2 @@
+﻿namespace RegistryOffice.Rest.RestModels;
+public record PersonEntity(int Id, string FullName, string DateOfBirthday, string Address, string Citizenship, int Children, bool MaritalStatus, string PhoneNumber, string PasportIMG);

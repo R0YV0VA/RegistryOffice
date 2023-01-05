@@ -19,4 +19,8 @@
     <ProjectReference Include="..\RegistryOffice.Infrastructure\RegistryOffice.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="PersonsPasportIMG\" />
+  </ItemGroup>
+
 </Project>

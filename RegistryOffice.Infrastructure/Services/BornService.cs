@@ -58,8 +58,8 @@ public class BornService : IBornService
         database.Parameters.AddWithValue("BirthDate", born.BirthDate);
         database.Parameters.AddWithValue("BirthPlace", born.BirthPlace);
         database.Parameters.AddWithValue("BirthCertificateIMG", born.BirthCertificateIMG);
-        database.Prepare();
-        await using NpgsqlDataReader rdr = database.ExecuteReader();
+        await database.PrepareAsync();
+        using NpgsqlDataReader rdr = await database.ExecuteReaderAsync();
         var _born = new BornModel();
         while (rdr.Read())
         {
@@ -85,8 +85,8 @@ public class BornService : IBornService
         database.Parameters.AddWithValue("BirthPlace", born.BirthPlace);
         database.Parameters.AddWithValue("BirthCertificateIMG", born.BirthCertificateIMG);
         database.Parameters.AddWithValue("Id", born.Id);
-        database.Prepare();
-        await using NpgsqlDataReader rdr = database.ExecuteReader();
+        await database.PrepareAsync();
+        using NpgsqlDataReader rdr = await database.ExecuteReaderAsync();
         var _born = new BornModel();
         while (rdr.Read())
         {
@@ -106,8 +106,8 @@ public class BornService : IBornService
         await con.OpenAsync();
         using var database = new NpgsqlCommand("DELETE FROM borns WHERE id=@Id RETURNING *;", con);
         database.Parameters.AddWithValue("Id", Id);
-        database.Prepare();
-        await using NpgsqlDataReader rdr = database.ExecuteReader();
+        await database.PrepareAsync();
+        using NpgsqlDataReader rdr = await database.ExecuteReaderAsync();
         var _born = new BornModel();
         while (rdr.Read())
         {
@@ -119,16 +119,25 @@ public class BornService : IBornService
             _born.BirthPlace = rdr.GetString(5);
             _born.BirthCertificateIMG = rdr.GetString(6);
         }
-        return _born;
+        try
+        {
+            File.Delete(_born.BirthCertificateIMG);
+            return _born;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return null;
+        }
     }
     public async Task<bool> SaveLog(string ip, string operation, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
-        con.Open();
+        await con.OpenAsync();
         using var database = new NpgsqlCommand("INSERT INTO logs (operation, timestamp) VALUES (@Operation, @Timestamp);", con);
         database.Parameters.AddWithValue("Operation", ip + " - " + operation);
         database.Parameters.AddWithValue("Timestamp", DateTime.UtcNow);
-        database.Prepare();
+        await database.PrepareAsync();
         await database.ExecuteNonQueryAsync();
         return true;
     }

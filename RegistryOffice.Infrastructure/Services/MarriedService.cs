@@ -9,9 +9,9 @@ public class MarriedService : IMarriedService
     public async Task<MarriedModel> GetMarriedById(int Id, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
-        con.Open();
+        await con.OpenAsync();
         using var database = new NpgsqlCommand($"SELECT * FROM marrieds WHERE id=\'{Id}\'", con);
-        await using NpgsqlDataReader rdr = database.ExecuteReader();
+        using NpgsqlDataReader rdr = await database.ExecuteReaderAsync();
         var _married = new MarriedModel();
         while (rdr.Read())
         {
@@ -26,9 +26,9 @@ public class MarriedService : IMarriedService
     public async Task<List<MarriedModel>> GetAllMarrieds(string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
-        con.Open();
+        await con.OpenAsync();
         using var database = new NpgsqlCommand("SELECT * FROM marrieds", con);
-        await using NpgsqlDataReader rdr = database.ExecuteReader();
+        using NpgsqlDataReader rdr = await database.ExecuteReaderAsync();
         var _marrieds = new List<MarriedModel>();
         while (rdr.Read())
         {
@@ -45,14 +45,14 @@ public class MarriedService : IMarriedService
     public async Task<MarriedModel> AddMarried(MarriedToAddModel married, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
-        con.Open();
+        await con.OpenAsync();
         using var database = new NpgsqlCommand("INSERT INTO marrieds (first_person_id, second_person_id, date_of_marriage, marriage_certificate_img) VALUES (@Person1Id, @Person2Id, @DateOfMarriage, @MarriageCertificateIMG) RETURNING *;", con);
         database.Parameters.AddWithValue("Person1Id", married.Person1Id);
         database.Parameters.AddWithValue("Person2Id", married.Person2Id);
         database.Parameters.AddWithValue("DateOfMarriage", married.DateOfMarriage);
         database.Parameters.AddWithValue("MarriageCertificateIMG", married.MarriageCertificateIMG);
-        database.Prepare();
-        await using NpgsqlDataReader rdr = database.ExecuteReader();
+        await database.PrepareAsync();
+        using NpgsqlDataReader rdr = await database.ExecuteReaderAsync();
         var _married = new MarriedModel();
         while (rdr.Read())
         {
@@ -67,15 +67,15 @@ public class MarriedService : IMarriedService
     public async Task<MarriedModel> UpdateMarried(MarriedModel married, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
-        con.Open();
+        await con.OpenAsync();
         using var database = new NpgsqlCommand("UPDATE marrieds SET first_person_id=@Person1Id, second_person_id=@Person2Id, date_of_marriage=@DateOfMarriage, marriage_certificate_img=@MarriageCertificateIMG WHERE id=@Id RETURNING *;", con);
         database.Parameters.AddWithValue("Id", married.Id);
         database.Parameters.AddWithValue("Person1Id", married.Person1Id);
         database.Parameters.AddWithValue("Person2Id", married.Person2Id);
         database.Parameters.AddWithValue("DateOfMarriage", married.DateOfMarriage);
         database.Parameters.AddWithValue("MarriageCertificateIMG", married.MarriageCertificateIMG);
-        database.Prepare();
-        await using NpgsqlDataReader rdr = database.ExecuteReader();
+        await database.PrepareAsync();
+        using NpgsqlDataReader rdr = await database.ExecuteReaderAsync();
         var _married = new MarriedModel();
         while (rdr.Read())
         {
@@ -90,9 +90,9 @@ public class MarriedService : IMarriedService
     public async Task<MarriedModel> DeleteMarried(int Id, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
-        con.Open();
+        await con.OpenAsync();
         using var database = new NpgsqlCommand($"DELETE FROM marrieds WHERE id=\'{Id}\' RETURNING *", con);
-        await using NpgsqlDataReader rdr = database.ExecuteReader();
+        using NpgsqlDataReader rdr = await database.ExecuteReaderAsync();
         var _married = new MarriedModel();
         while (rdr.Read())
         {
@@ -102,17 +102,25 @@ public class MarriedService : IMarriedService
             _married.DateOfMarriage = rdr.GetString(3);
             _married.MarriageCertificateIMG = rdr.GetString(4);
         }
-        File.Delete(_married.MarriageCertificateIMG);
-        return _married;
+        try
+        {
+            File.Delete(_married.MarriageCertificateIMG);
+            return _married;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return null;
+        }
     }
     public async Task<bool> SaveLog(string ip, string operation, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
-        con.Open();
+        await con.OpenAsync();
         using var database = new NpgsqlCommand("INSERT INTO logs (operation, timestamp) VALUES (@Operation, @Timestamp);", con);
         database.Parameters.AddWithValue("Operation", ip + " - " + operation);
         database.Parameters.AddWithValue("Timestamp", DateTime.UtcNow);
-        database.Prepare();
+        await database.PrepareAsync();
         await database.ExecuteNonQueryAsync();
         return true;
     }

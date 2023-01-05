@@ -11,9 +11,9 @@ public class PersonService : IPersonService
     public async Task<PersonModel> GetPersonById(int Id, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
-        con.Open();
+        await con.OpenAsync();
         using var database = new NpgsqlCommand($"SELECT * FROM persons WHERE id=\'{Id}\'", con);
-        await using NpgsqlDataReader rdr = database.ExecuteReader();
+        using NpgsqlDataReader rdr = await database.ExecuteReaderAsync();
         var _person = new PersonModel();
         while (rdr.Read())
         {
@@ -32,9 +32,9 @@ public class PersonService : IPersonService
     public async Task<List<PersonModel>> GetAllPersons(string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
-        con.Open();
+        await con.OpenAsync();
         using var database = new NpgsqlCommand("SELECT * FROM persons", con);
-        await using NpgsqlDataReader rdr = database.ExecuteReader();
+        using NpgsqlDataReader rdr = await database.ExecuteReaderAsync();
         var _persons = new List<PersonModel>();
         while (rdr.Read())
         {
@@ -55,7 +55,7 @@ public class PersonService : IPersonService
     public async Task<PersonModel> AddPerson(PersonToAddModel person, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
-        con.Open();
+        await con.OpenAsync();
         using var database = new NpgsqlCommand("INSERT INTO persons (full_name, address, citizenship, children, marital_status, phone_number, pasport_img, date_of_birthday) VALUES (@FullName, @Address, @Citizenship, @Children, @MaritalStatus, @PhoneNumber, @PasportIMG, @DateOfBirthday) RETURNING *;", con);
         database.Parameters.AddWithValue("FullName", person.FullName);       
         database.Parameters.AddWithValue("Address", person.Address);
@@ -65,8 +65,8 @@ public class PersonService : IPersonService
         database.Parameters.AddWithValue("PhoneNumber", person.PhoneNumber);
         database.Parameters.AddWithValue("PasportIMG", person.PasportIMG);
         database.Parameters.AddWithValue("DateOfBirthday", person.DateOfBirthday);
-        database.Prepare();
-        await using NpgsqlDataReader rdr = database.ExecuteReader();
+        await database.PrepareAsync();
+        using NpgsqlDataReader rdr = await database.ExecuteReaderAsync();
         var _person = new PersonModel();
         while (rdr.Read())
         {
@@ -85,7 +85,7 @@ public class PersonService : IPersonService
     public async Task<PersonModel> UpdatePerson(PersonModel person, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
-        con.Open();
+        await con.OpenAsync();
         using var database = new NpgsqlCommand("UPDATE persons SET full_name = @full_name, address = @address, citizenship = @citizenship, children = @children, marital_status = @marital_status, phone_number = @phone_number, pasport_img = @pasport_img, date_of_birthday = @date_of_birthday WHERE id=@id RETURNING *;", con);
         database.Parameters.AddWithValue("full_name", person.FullName);
         database.Parameters.AddWithValue("address", person.Address);
@@ -96,8 +96,8 @@ public class PersonService : IPersonService
         database.Parameters.AddWithValue("pasport_img", person.PasportIMG);
         database.Parameters.AddWithValue("date_of_birthday", person.DateOfBirthday);
         database.Parameters.AddWithValue("id", person.Id);
-        database.Prepare();
-        await using NpgsqlDataReader rdr = database.ExecuteReader();
+        await database.PrepareAsync();
+        using NpgsqlDataReader rdr = await database.ExecuteReaderAsync();
         var _person = new PersonModel();
         while (rdr.Read())
         {
@@ -116,9 +116,9 @@ public class PersonService : IPersonService
     public async Task<PersonModel> DeletePerson(int Id, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
-        con.Open();
+        await con.OpenAsync();
         using var database = new NpgsqlCommand($"DELETE FROM persons WHERE id={Id} RETURNING *;", con);
-        await using NpgsqlDataReader rdr = database.ExecuteReader();
+        using NpgsqlDataReader rdr = await database.ExecuteReaderAsync();
         var _person = new PersonModel();
         while (rdr.Read())
         {
@@ -132,17 +132,25 @@ public class PersonService : IPersonService
             _person.PasportIMG = rdr.GetString(7);
             _person.DateOfBirthday = rdr.GetString(8);
         }
-        File.Delete(_person.PasportIMG);
-        return _person;
+        try
+        {
+            File.Delete(_person.PasportIMG);
+            return _person;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return null;
+        }
     }
     public async Task<bool> SaveLog(string ip, string operation, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
-        con.Open();
+        await con.OpenAsync();
         using var database = new NpgsqlCommand("INSERT INTO logs (operation, timestamp) VALUES (@Operation, @Timestamp);", con);
         database.Parameters.AddWithValue("Operation", ip + " - " + operation);
         database.Parameters.AddWithValue("Timestamp", DateTime.UtcNow);
-        database.Prepare();
+        await database.PrepareAsync();
         await database.ExecuteNonQueryAsync();
         return true;
     }

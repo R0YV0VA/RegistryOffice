@@ -45,6 +45,7 @@ public class DeadService : IDeadService
         using var database = new NpgsqlCommand("INSERT INTO deads (full_name, death_case_img) VALUES (@FullName, @DeathCaseIMG) RETURNING *;", con);
         database.Parameters.AddWithValue("FullName", dead.FullName);
         database.Parameters.AddWithValue("DeathCaseIMG", dead.DeathCaseIMG);
+        database.Prepare();
         await using NpgsqlDataReader rdr = database.ExecuteReader();
         var _dead = new DeadModel();
         while (rdr.Read())
@@ -63,6 +64,7 @@ public class DeadService : IDeadService
         database.Parameters.AddWithValue("Id", dead.Id);
         database.Parameters.AddWithValue("FullName", dead.FullName);
         database.Parameters.AddWithValue("DeathCaseIMG", dead.DeathCaseIMG);
+        database.Prepare();
         await using NpgsqlDataReader rdr = database.ExecuteReader();
         var _dead = new DeadModel();
         while (rdr.Read())
@@ -75,27 +77,19 @@ public class DeadService : IDeadService
     }
     public async Task<DeadModel> DeleteDead(int Id, string connectionString)
     {
-        try
+        using var con = new NpgsqlConnection(connectionString);
+        con.Open();
+        using var database = new NpgsqlCommand($"DELETE FROM deads WHERE id=\'{Id}\' RETURNING *;", con);
+        await using NpgsqlDataReader rdr = database.ExecuteReader();
+        var _dead = new DeadModel();
+        while (rdr.Read())
         {
-            using var con = new NpgsqlConnection(connectionString);
-            con.Open();
-            using var database = new NpgsqlCommand($"DELETE FROM deads WHERE id=\'{Id}\' RETURNING *;", con);
-            await using NpgsqlDataReader rdr = database.ExecuteReader();
-            var _dead = new DeadModel();
-            while (rdr.Read())
-            {
-                _dead.Id = rdr.GetInt32(0);
-                _dead.FullName = rdr.GetString(1);
-                _dead.DeathCaseIMG = rdr.GetString(2);
-            }
-            File.Delete(_dead.DeathCaseIMG);
-            return _dead;
+            _dead.Id = rdr.GetInt32(0);
+            _dead.FullName = rdr.GetString(1);
+            _dead.DeathCaseIMG = rdr.GetString(2);
         }
-        catch(Exception e)
-        {
-            Console.WriteLine(e.Message);
-            return null;
-        }
+        File.Delete(_dead.DeathCaseIMG);
+        return _dead;
     }
     public async Task<bool> SaveLog(string ip, string operation, string connectionString)
     {

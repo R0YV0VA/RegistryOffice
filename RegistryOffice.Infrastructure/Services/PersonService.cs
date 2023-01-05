@@ -115,33 +115,25 @@ public class PersonService : IPersonService
     }
     public async Task<PersonModel> DeletePerson(int Id, string connectionString)
     {
-        try
+        using var con = new NpgsqlConnection(connectionString);
+        con.Open();
+        using var database = new NpgsqlCommand($"DELETE FROM persons WHERE id={Id} RETURNING *;", con);
+        await using NpgsqlDataReader rdr = database.ExecuteReader();
+        var _person = new PersonModel();
+        while (rdr.Read())
         {
-            using var con = new NpgsqlConnection(connectionString);
-            con.Open();
-            using var database = new NpgsqlCommand($"DELETE FROM persons WHERE id={Id} RETURNING *;", con);
-            await using NpgsqlDataReader rdr = database.ExecuteReader();
-            var _person = new PersonModel();
-            while (rdr.Read())
-            {
-                _person.Id = rdr.GetInt32(0);
-                _person.FullName = rdr.GetString(1);
-                _person.Address = rdr.GetString(2);
-                _person.Citizenship = rdr.GetString(3);
-                _person.Children = rdr.GetInt32(4);
-                _person.MaritalStatus = rdr.GetBoolean(5);
-                _person.PhoneNumber = rdr.GetString(6);
-                _person.PasportIMG = rdr.GetString(7);
-                _person.DateOfBirthday = rdr.GetString(8);
-            }
-            File.Delete(_person.PasportIMG);
-            return _person;
+            _person.Id = rdr.GetInt32(0);
+            _person.FullName = rdr.GetString(1);
+            _person.Address = rdr.GetString(2);
+            _person.Citizenship = rdr.GetString(3);
+            _person.Children = rdr.GetInt32(4);
+            _person.MaritalStatus = rdr.GetBoolean(5);
+            _person.PhoneNumber = rdr.GetString(6);
+            _person.PasportIMG = rdr.GetString(7);
+            _person.DateOfBirthday = rdr.GetString(8);
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex.Message);
-            return null;
-        }
+        File.Delete(_person.PasportIMG);
+        return _person;
     }
     public async Task<bool> SaveLog(string ip, string operation, string connectionString)
     {

@@ -12,6 +12,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IPersonService, PersonService>();
 builder.Services.AddScoped<IMarriedService, MarriedService>();
 builder.Services.AddScoped<IDeadService, DeadService>();
+builder.Services.AddScoped<IBornService, BornService>();
 
 var app = builder.Build();
 

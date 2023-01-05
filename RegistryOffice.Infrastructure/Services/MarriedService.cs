@@ -51,6 +51,7 @@ public class MarriedService : IMarriedService
         database.Parameters.AddWithValue("Person2Id", married.Person2Id);
         database.Parameters.AddWithValue("DateOfMarriage", married.DateOfMarriage);
         database.Parameters.AddWithValue("MarriageCertificateIMG", married.MarriageCertificateIMG);
+        database.Prepare();
         await using NpgsqlDataReader rdr = database.ExecuteReader();
         var _married = new MarriedModel();
         while (rdr.Read())
@@ -73,6 +74,7 @@ public class MarriedService : IMarriedService
         database.Parameters.AddWithValue("Person2Id", married.Person2Id);
         database.Parameters.AddWithValue("DateOfMarriage", married.DateOfMarriage);
         database.Parameters.AddWithValue("MarriageCertificateIMG", married.MarriageCertificateIMG);
+        database.Prepare();
         await using NpgsqlDataReader rdr = database.ExecuteReader();
         var _married = new MarriedModel();
         while (rdr.Read())
@@ -87,29 +89,21 @@ public class MarriedService : IMarriedService
     }
     public async Task<MarriedModel> DeleteMarried(int Id, string connectionString)
     {
-        try
+        using var con = new NpgsqlConnection(connectionString);
+        con.Open();
+        using var database = new NpgsqlCommand($"DELETE FROM marrieds WHERE id=\'{Id}\' RETURNING *", con);
+        await using NpgsqlDataReader rdr = database.ExecuteReader();
+        var _married = new MarriedModel();
+        while (rdr.Read())
         {
-            using var con = new NpgsqlConnection(connectionString);
-            con.Open();
-            using var database = new NpgsqlCommand($"DELETE FROM marrieds WHERE id=\'{Id}\' RETURNING *", con);
-            await using NpgsqlDataReader rdr = database.ExecuteReader();
-            var _married = new MarriedModel();
-            while (rdr.Read())
-            {
-                _married.Id = rdr.GetInt32(0);
-                _married.Person1Id = rdr.GetInt32(1);
-                _married.Person2Id = rdr.GetInt32(2);
-                _married.DateOfMarriage = rdr.GetString(3);
-                _married.MarriageCertificateIMG = rdr.GetString(4);
-            }
-            File.Delete(_married.MarriageCertificateIMG);
-            return _married;
+            _married.Id = rdr.GetInt32(0);
+            _married.Person1Id = rdr.GetInt32(1);
+            _married.Person2Id = rdr.GetInt32(2);
+            _married.DateOfMarriage = rdr.GetString(3);
+            _married.MarriageCertificateIMG = rdr.GetString(4);
         }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return null;
-        }
+        File.Delete(_married.MarriageCertificateIMG);
+        return _married;
     }
     public async Task<bool> SaveLog(string ip, string operation, string connectionString)
     {

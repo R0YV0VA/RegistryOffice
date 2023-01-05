@@ -19,18 +19,22 @@ public class DeadController : Controller
     [HttpGet("{Id}")]
     public async Task<DeadEntity> GetDead(int Id)
     {
+        string ipAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
         var result = await _deadService.GetDeadById(Id, _configuration.GetConnectionString("PostgreSQLConnectionString"));
+        await _deadService.SaveLog(ipAddress, $"Get dead by id={Id}", _configuration.GetConnectionString("PostgreSQLConnectionString"));
         return new DeadEntity(result.Id, result.FullName, result.DeathCaseIMG);
     }
     [HttpGet]
     public async Task<List<DeadEntity>> GetAllDeads()
     {
+        string ipAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
         var result = await _deadService.GetAllDeads(_configuration.GetConnectionString("PostgreSQLConnectionString"));
         var _deads = new List<DeadEntity>();
         foreach (var dead in result)
         {
             _deads.Add(new DeadEntity(dead.Id, dead.FullName, dead.DeathCaseIMG));
         }
+        await _deadService.SaveLog(ipAddress, "Get all deads", _configuration.GetConnectionString("PostgreSQLConnectionString"));
         return _deads;
     }
     [HttpPost]
@@ -38,6 +42,7 @@ public class DeadController : Controller
     {
         try
         {
+            string ipAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
             string path = "";
             path = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "DeathCaseIMG"));
             if (!Directory.Exists(path))
@@ -50,6 +55,7 @@ public class DeadController : Controller
             }
             dead.DeathCaseIMG = Path.Combine(path, Image.FileName);
             var result = await _deadService.AddDead(dead, _configuration.GetConnectionString("PostgreSQLConnectionString"));
+            await _deadService.SaveLog(ipAddress, $"Add dead FullName={result.FullName}", _configuration.GetConnectionString("PostgreSQLConnectionString"));
             return new DeadEntity(result.Id, result.FullName, result.DeathCaseIMG);
         }
         catch (Exception e)
@@ -63,6 +69,7 @@ public class DeadController : Controller
     {
         try
         {
+            string ipAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
             string path = "";
             path = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "DeathCaseIMG"));
             if (!Directory.Exists(path))
@@ -75,6 +82,7 @@ public class DeadController : Controller
             }
             dead.DeathCaseIMG = Path.Combine(path, Image.FileName);
             var result = await _deadService.UpdateDead(dead, _configuration.GetConnectionString("PostgreSQLConnectionString"));
+            await _deadService.SaveLog(ipAddress, $"Update dead FullName={dead.FullName}", _configuration.GetConnectionString("PostgreSQLConnectionString"));
             return new DeadEntity(result.Id, result.FullName, result.DeathCaseIMG);
         }
         catch (Exception e)
@@ -86,7 +94,9 @@ public class DeadController : Controller
     [HttpDelete("{Id}")]
     public async Task<DeadEntity> DeleteDead(int Id)
     {
+        string ipAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
         var result = await _deadService.DeleteDead(Id, _configuration.GetConnectionString("PostgreSQLConnectionString"));
+        await _deadService.SaveLog(ipAddress, $"Delete dead FullName={result.FullName}", _configuration.GetConnectionString("PostgreSQLConnectionString"));
         return new DeadEntity(result.Id, result.FullName, result.DeathCaseIMG);
     }
 }

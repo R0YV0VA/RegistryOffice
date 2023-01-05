@@ -1,6 +1,8 @@
 ﻿using Npgsql;
 using RegistryOffice.Application.Services;
 using RegistryOffice.Domain.Models;
+using System;
+using System.Net.Http;
 
 namespace RegistryOffice.Infrastructure.Services;
 
@@ -140,5 +142,16 @@ public class PersonService : IPersonService
             Console.WriteLine(ex.Message);
             return null;
         }
+    }
+    public async Task<bool> SaveLog(string ip, string operation, string connectionString)
+    {
+        using var con = new NpgsqlConnection(connectionString);
+        con.Open();
+        using var database = new NpgsqlCommand("INSERT INTO logs (operation, timestamp) VALUES (@Operation, @Timestamp);", con);
+        database.Parameters.AddWithValue("Operation", ip + " - " + operation);
+        database.Parameters.AddWithValue("Timestamp", DateTime.UtcNow);
+        database.Prepare();
+        await database.ExecuteNonQueryAsync();
+        return true;
     }
 }

@@ -19,18 +19,22 @@ public class MarriedController : Controller
     [HttpGet("{Id}")]
     public async Task<MarriedEntity> GetMarried(int Id)
     {
+        string ipAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
         var result = await _marriedService.GetMarriedById(Id, _configuration.GetConnectionString("PostgreSQLConnectionString"));
+        await _marriedService.SaveLog(ipAddress, $"Get married by id={Id}", _configuration.GetConnectionString("PostgreSQLConnectionString"));
         return new MarriedEntity(result.Id, result.Person1Id, result.Person2Id, result.DateOfMarriage, result.MarriageCertificateIMG);
     }
     [HttpGet]
     public async Task<List<MarriedEntity>> GetAllMarrieds()
     {
+        string ipAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
         var result = await _marriedService.GetAllMarrieds(_configuration.GetConnectionString("PostgreSQLConnectionString"));
         var _marrieds = new List<MarriedEntity>();
         foreach (var married in result)
         {
             _marrieds.Add(new MarriedEntity(married.Id, married.Person1Id, married.Person2Id, married.DateOfMarriage, married.MarriageCertificateIMG));
         }
+        await _marriedService.SaveLog(ipAddress, "Get all marrieds", _configuration.GetConnectionString("PostgreSQLConnectionString"));
         return _marrieds;
     }
     [HttpPost]
@@ -38,6 +42,7 @@ public class MarriedController : Controller
     {
         try
         {
+            string ipAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
             string path = "";
             path = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "MarriageCertificateIMG"));
             if (!Directory.Exists(path))
@@ -50,6 +55,7 @@ public class MarriedController : Controller
             }
             married.MarriageCertificateIMG = Path.Combine(path, Image.FileName);
             var result = await _marriedService.AddMarried(married, _configuration.GetConnectionString("PostgreSQLConnectionString"));
+            await _marriedService.SaveLog(ipAddress, $"Add married Id={result.Id}", _configuration.GetConnectionString("PostgreSQLConnectionString"));
             return new MarriedEntity(result.Id, result.Person1Id, result.Person2Id, result.DateOfMarriage, result.MarriageCertificateIMG);
         }
         catch (Exception ex)
@@ -63,6 +69,7 @@ public class MarriedController : Controller
     {
         try
         {
+            string ipAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
             string path = "";
             path = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "MarriageCertificateIMG"));
             if (!Directory.Exists(path))
@@ -75,6 +82,7 @@ public class MarriedController : Controller
             }
             married.MarriageCertificateIMG = Path.Combine(path, Image.FileName);
             var result = await _marriedService.UpdateMarried(married, _configuration.GetConnectionString("PostgreSQLConnectionString"));
+            await _marriedService.SaveLog(ipAddress, $"Update married Id={result.Id}", _configuration.GetConnectionString("PostgreSQLConnectionString"));
             return new MarriedEntity(result.Id, result.Person1Id, result.Person2Id, result.DateOfMarriage, result.MarriageCertificateIMG);
         }
         catch (Exception ex)
@@ -86,7 +94,9 @@ public class MarriedController : Controller
     [HttpDelete("{Id}")]
     public async Task<MarriedEntity> DeleteMarried(int Id)
     {
+        string ipAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
         var result =  await _marriedService.DeleteMarried(Id, _configuration.GetConnectionString("PostgreSQLConnectionString"));
+        await _marriedService.SaveLog(ipAddress, $"Delete married Id={Id}", _configuration.GetConnectionString("PostgreSQLConnectionString"));
         return new MarriedEntity(result.Id, result.Person1Id, result.Person2Id, result.DateOfMarriage, result.MarriageCertificateIMG);
     }
 }

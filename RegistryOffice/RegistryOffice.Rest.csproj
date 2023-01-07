@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RegistryOffice.Application\RegistryOffice.Application.csproj" />
+    <ProjectReference Include="..\RegistryOffice.Domain\RegistryOffice.Domain.csproj" />
     <ProjectReference Include="..\RegistryOffice.Infrastructure\RegistryOffice.Infrastructure.csproj" />
   </ItemGroup>
 

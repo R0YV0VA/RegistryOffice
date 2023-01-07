@@ -82,7 +82,7 @@ public class PersonService : IPersonService
         }
         return _person;
     }
-    public async Task<PersonModel> UpdatePerson(PersonModel person, string connectionString)
+    public async Task<PersonModel> UpdatePerson(PersonModel person, string impPathToDel, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
         await con.OpenAsync();
@@ -111,7 +111,16 @@ public class PersonService : IPersonService
             _person.PasportIMG = rdr.GetString(7);
             _person.DateOfBirthday = rdr.GetString(8);
         }
-        return _person;
+        try
+        {
+            File.Delete(impPathToDel);
+            return _person;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return null;
+        }
     }
     public async Task<PersonModel> DeletePerson(int Id, string connectionString)
     {

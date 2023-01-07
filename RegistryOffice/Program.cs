@@ -13,6 +13,15 @@ builder.Services.AddScoped<IPersonService, PersonService>();
 builder.Services.AddScoped<IMarriedService, MarriedService>();
 builder.Services.AddScoped<IDeadService, DeadService>();
 builder.Services.AddScoped<IBornService, BornService>();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", builder =>
+    {
+        builder.AllowAnyOrigin()
+               .AllowAnyMethod()
+               .AllowAnyHeader();
+    });
+});
 
 var app = builder.Build();
 
@@ -22,6 +31,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors("AllowAll");
 
 app.UseHttpsRedirection();
 

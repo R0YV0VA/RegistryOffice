@@ -7,7 +7,7 @@ public interface IBornService
     Task<BornModel> GetBornById(int Id, string connectionString);
     Task<List<BornModel>> GetAllBorns(string connectionString);
     Task<BornModel> AddBorn(BornToAddModel born, string connectionString);
-    Task<BornModel> UpdateBorn(BornModel born, string connectionString);
+    Task<BornModel> UpdateBorn(BornModel born, string impPathToDel, string connectionString);
     Task<BornModel> DeleteBorn(int Id, string connectionString);
     Task<bool> SaveLog(string ip, string operation, string connectionString);
 }

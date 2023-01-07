@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc;
 using RegistryOffice.Application.Services;
 using RegistryOffice.Domain.Models;
+using RegistryOffice.Infrastructure.Services;
 using RegistryOffice.Rest.RestModels;
 
 namespace RegistryOffice.Rest.Controllers;
@@ -15,6 +17,7 @@ public class BornController : Controller
         _bornService = bornService;
         _configuration = configuration;
     }
+    [EnableCors("AllowAll")]
     [HttpGet("{Id}")]
     public async Task<BornEntity> GetBorn(int Id)
     {
@@ -23,6 +26,7 @@ public class BornController : Controller
         await _bornService.SaveLog(ipAddress, $"Get born by id={Id}", _configuration.GetConnectionString("PostgreSQLConnectionString"));
         return new BornEntity(result.Id, result.FullName, result.ParentId1, result.ParentId2, result.BirthDate, result.BirthPlace, result.BirthCertificateIMG);
     }
+    [EnableCors("AllowAll")]
     [HttpGet]
     public async Task<List<BornEntity>> GetAllBorns()
     {
@@ -36,6 +40,7 @@ public class BornController : Controller
         await _bornService.SaveLog(ipAddress, "Get all borns", _configuration.GetConnectionString("PostgreSQLConnectionString"));
         return _borns;
     }
+    [EnableCors("AllowAll")]
     [HttpPost]
     public async Task<BornEntity> AddBorn([FromForm] BornToAddModel born, IFormFile Image)
     {
@@ -63,11 +68,14 @@ public class BornController : Controller
             return null;
         }
     }
+    [EnableCors("AllowAll")]
     [HttpPut]
     public async Task<BornEntity> UpdateBorn([FromForm] BornModel born, IFormFile Image)
     {
         try
         {
+            var delFile = await _bornService.GetBornById(born.Id, _configuration.GetConnectionString("PostgreSQLConnectionString"));
+            var delFilePath = delFile.BirthCertificateIMG;
             string ipAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
             string path = "";
             path = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "BirthCertificateIMG"));
@@ -80,7 +88,7 @@ public class BornController : Controller
                 await Image.CopyToAsync(fileStream);
             }
             born.BirthCertificateIMG = Path.Combine(path, Image.FileName);
-            var result = await _bornService.UpdateBorn(born, _configuration.GetConnectionString("PostgreSQLConnectionString"));
+            var result = await _bornService.UpdateBorn(born, delFilePath, _configuration.GetConnectionString("PostgreSQLConnectionString"));
             await _bornService.SaveLog(ipAddress, $"Update born with id={result.Id}", _configuration.GetConnectionString("PostgreSQLConnectionString"));
             return new BornEntity(result.Id, result.FullName, result.ParentId1, result.ParentId2, result.BirthDate, result.BirthPlace, result.BirthCertificateIMG);
         }
@@ -90,6 +98,7 @@ public class BornController : Controller
             return null;
         }
     }
+    [EnableCors("AllowAll")]
     [HttpDelete("{Id}")]
     public async Task<BornEntity> DeleteBorn(int Id)
     {

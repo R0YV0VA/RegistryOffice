@@ -56,7 +56,7 @@ public class DeadService : IDeadService
         }
         return _dead;
     }
-    public async Task<DeadModel> UpdateDead(DeadModel dead, string connectionString)
+    public async Task<DeadModel> UpdateDead(DeadModel dead, string impPathToDel, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
         await con.OpenAsync();
@@ -73,7 +73,16 @@ public class DeadService : IDeadService
             _dead.FullName = rdr.GetString(1);
             _dead.DeathCaseIMG = rdr.GetString(2);
         }
-        return _dead;
+        try
+        {
+            File.Delete(impPathToDel);
+            return _dead;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return null;
+        }
     }
     public async Task<DeadModel> DeleteDead(int Id, string connectionString)
     {

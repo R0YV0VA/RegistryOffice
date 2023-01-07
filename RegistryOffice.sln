@@ -3,15 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33122.133
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RegistryOffice.Rest", "RegistryOffice\RegistryOffice.Rest.csproj", "{33546976-8EB9-493C-BC19-F62E92F44DCD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RegistryOffice.Rest", "RegistryOffice\RegistryOffice.Rest.csproj", "{33546976-8EB9-493C-BC19-F62E92F44DCD}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{11D3B1F1-E5BB-4CB7-9194-002F82FA8CAB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RegistryOffice.Application", "RegistryOffice.Application\RegistryOffice.Application.csproj", "{ADE388C8-1675-491B-92CF-C6F062EC3F23}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RegistryOffice.Application", "RegistryOffice.Application\RegistryOffice.Application.csproj", "{ADE388C8-1675-491B-92CF-C6F062EC3F23}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RegistryOffice.Domain", "RegistryOffice.Domain\RegistryOffice.Domain.csproj", "{C73A2AF3-65E1-4F17-8BCF-8A816870ABEA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RegistryOffice.Domain", "RegistryOffice.Domain\RegistryOffice.Domain.csproj", "{C73A2AF3-65E1-4F17-8BCF-8A816870ABEA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RegistryOffice.Infrastructure", "RegistryOffice.Infrastructure\RegistryOffice.Infrastructure.csproj", "{6BD37373-F0F4-4F7D-B27B-F49C41D769E0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RegistryOffice.Infrastructure", "RegistryOffice.Infrastructure\RegistryOffice.Infrastructure.csproj", "{6BD37373-F0F4-4F7D-B27B-F49C41D769E0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

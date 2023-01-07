@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc;
 using RegistryOffice.Application.Services;
 using RegistryOffice.Domain.Models;
 using RegistryOffice.Rest.RestModels;
@@ -16,6 +17,7 @@ namespace RegistryOffice.Rest.Controllers
             _personService = personService;
             _configuration = configuration;
         }
+        [EnableCors("AllowAll")]
         [HttpGet("{Id}")]
         public async Task<PersonEntity> GetPerson(int Id)
         {
@@ -24,6 +26,7 @@ namespace RegistryOffice.Rest.Controllers
             await _personService.SaveLog(ipAddress, $"Get person by id=({Id})", _configuration.GetConnectionString("PostgreSQLConnectionString"));
             return new PersonEntity(result.Id, result.FullName, result.DateOfBirthday, result.Address, result.Citizenship, result.Children, result.MaritalStatus, result.PhoneNumber, result.PasportIMG);
         }
+        [EnableCors("AllowAll")]
         [HttpGet]
         public async Task<List<PersonEntity>> GetAllPersons()
         {
@@ -37,6 +40,7 @@ namespace RegistryOffice.Rest.Controllers
             await _personService.SaveLog(ipAddress, "Get all persons", _configuration.GetConnectionString("PostgreSQLConnectionString"));
             return _persons;
         }
+        [EnableCors("AllowAll")]
         [HttpPost]
         public async Task<PersonEntity> AddPerson([FromForm]PersonToAddModel person, IFormFile Image)
         {
@@ -64,11 +68,14 @@ namespace RegistryOffice.Rest.Controllers
                 return null;
             }
         }
+        [EnableCors("AllowAll")]
         [HttpPut]
         public async Task<PersonEntity> UpdatePerson([FromForm]PersonModel person, IFormFile Image)
         {
             try
             {
+                var delFile = await _personService.GetPersonById(person.Id, _configuration.GetConnectionString("PostgreSQLConnectionString"));
+                var delFilePath = delFile.PasportIMG;
                 string ipAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
                 string path = "";
                 path = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "PersonsPasportIMG"));
@@ -81,7 +88,7 @@ namespace RegistryOffice.Rest.Controllers
                     await Image.CopyToAsync(fileStream);
                 }
                 person.PasportIMG = Path.Combine(path, Image.FileName);
-                var result = await _personService.UpdatePerson(person, _configuration.GetConnectionString("PostgreSQLConnectionString"));
+                var result = await _personService.UpdatePerson(person, delFilePath, _configuration.GetConnectionString("PostgreSQLConnectionString"));
                 await _personService.SaveLog(ipAddress, $"Update person ({person.FullName})", _configuration.GetConnectionString("PostgreSQLConnectionString"));
                 return new PersonEntity(result.Id, result.FullName, result.DateOfBirthday, result.Address, result.Citizenship, result.Children, result.MaritalStatus, result.PhoneNumber, result.PasportIMG);
             }
@@ -91,6 +98,7 @@ namespace RegistryOffice.Rest.Controllers
                 return null;
             }
         }
+        [EnableCors("AllowAll")]
         [HttpDelete("{Id}")]
         public async Task<PersonEntity> DeletePerson(int Id)
         {

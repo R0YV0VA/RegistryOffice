@@ -64,7 +64,7 @@ public class MarriedService : IMarriedService
         }
         return _married;
     }
-    public async Task<MarriedModel> UpdateMarried(MarriedModel married, string connectionString)
+    public async Task<MarriedModel> UpdateMarried(MarriedModel married, string impPathToDel, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
         await con.OpenAsync();
@@ -85,7 +85,16 @@ public class MarriedService : IMarriedService
             _married.DateOfMarriage = rdr.GetString(3);
             _married.MarriageCertificateIMG = rdr.GetString(4);
         }
-        return _married;
+        try
+        {
+            File.Delete(impPathToDel);
+            return _married;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return null;
+        }
     }
     public async Task<MarriedModel> DeleteMarried(int Id, string connectionString)
     {

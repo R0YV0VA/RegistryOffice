@@ -73,7 +73,7 @@ public class BornService : IBornService
         }
         return _born;
     }
-    public async Task<BornModel> UpdateBorn(BornModel born, string connectionString)
+    public async Task<BornModel> UpdateBorn(BornModel born, string impPathToDel, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
         await con.OpenAsync();
@@ -98,7 +98,16 @@ public class BornService : IBornService
             _born.BirthPlace = rdr.GetString(5);
             _born.BirthCertificateIMG = rdr.GetString(6);
         }
-        return _born;
+        try
+        {
+            File.Delete(impPathToDel);
+            return _born;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return null;
+        }
     }
     public async Task<BornModel> DeleteBorn(int Id, string connectionString)
     {

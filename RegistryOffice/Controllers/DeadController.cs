@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc;
 using RegistryOffice.Application.Services;
 using RegistryOffice.Domain.Models;
+using RegistryOffice.Infrastructure.Services;
 using RegistryOffice.Rest.RestModels;
+using System.Threading;
 
 namespace RegistryOffice.Rest.Controllers;
 
@@ -16,6 +19,7 @@ public class DeadController : Controller
         _deadService = deadService;
         _configuration = configuration;
     }
+    [EnableCors("AllowAll")]
     [HttpGet("{Id}")]
     public async Task<DeadEntity> GetDead(int Id)
     {
@@ -24,6 +28,7 @@ public class DeadController : Controller
         await _deadService.SaveLog(ipAddress, $"Get dead by id={Id}", _configuration.GetConnectionString("PostgreSQLConnectionString"));
         return new DeadEntity(result.Id, result.FullName, result.DeathCaseIMG);
     }
+    [EnableCors("AllowAll")]
     [HttpGet]
     public async Task<List<DeadEntity>> GetAllDeads()
     {
@@ -37,6 +42,7 @@ public class DeadController : Controller
         await _deadService.SaveLog(ipAddress, "Get all deads", _configuration.GetConnectionString("PostgreSQLConnectionString"));
         return _deads;
     }
+    [EnableCors("AllowAll")]
     [HttpPost]
     public async Task<DeadEntity> AddDead([FromForm] DeadToAddModel dead, IFormFile Image)
     {
@@ -64,11 +70,14 @@ public class DeadController : Controller
             return null;
         }
     }
+    [EnableCors("AllowAll")]
     [HttpPut]
     public async Task<DeadEntity> UpdateDead([FromForm] DeadModel dead, IFormFile Image)
     {
         try
         {
+            var delFile = await _deadService.GetDeadById(dead.Id, _configuration.GetConnectionString("PostgreSQLConnectionString"));
+            var delFilePath = delFile.DeathCaseIMG;
             string ipAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
             string path = "";
             path = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "DeathCaseIMG"));
@@ -81,7 +90,7 @@ public class DeadController : Controller
                 await Image.CopyToAsync(fileStream);
             }
             dead.DeathCaseIMG = Path.Combine(path, Image.FileName);
-            var result = await _deadService.UpdateDead(dead, _configuration.GetConnectionString("PostgreSQLConnectionString"));
+            var result = await _deadService.UpdateDead(dead, delFilePath, _configuration.GetConnectionString("PostgreSQLConnectionString"));
             await _deadService.SaveLog(ipAddress, $"Update dead FullName={dead.FullName}", _configuration.GetConnectionString("PostgreSQLConnectionString"));
             return new DeadEntity(result.Id, result.FullName, result.DeathCaseIMG);
         }
@@ -91,6 +100,7 @@ public class DeadController : Controller
             return null;
         }
     }
+    [EnableCors("AllowAll")]
     [HttpDelete("{Id}")]
     public async Task<DeadEntity> DeleteDead(int Id)
     {

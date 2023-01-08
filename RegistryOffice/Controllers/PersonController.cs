@@ -57,8 +57,7 @@ namespace RegistryOffice.Rest.Controllers
                 {
                     await Image.CopyToAsync(fileStream);
                 }
-                person.PasportIMG = Path.Combine(path, Image.FileName);
-                var result = await _personService.AddPerson(person, _configuration.GetConnectionString("PostgreSQLConnectionString"));
+                var result = await _personService.AddPerson(person, Path.Combine(path, Image.FileName), _configuration.GetConnectionString("PostgreSQLConnectionString"));
                 await _personService.SaveLog(ipAddress, $"Add person ({person.FullName})", _configuration.GetConnectionString("PostgreSQLConnectionString"));
                 return new PersonEntity(result.Id, result.FullName, result.DateOfBirthday, result.Address, result.Citizenship, result.Children, result.MaritalStatus, result.PhoneNumber, result.PasportIMG);
             }
@@ -70,11 +69,11 @@ namespace RegistryOffice.Rest.Controllers
         }
         [EnableCors("AllowAll")]
         [HttpPut]
-        public async Task<PersonEntity> UpdatePerson([FromForm]PersonModel person, IFormFile Image)
+        public async Task<PersonEntity> UpdatePerson([FromForm]int Id, [FromForm]PersonToAddModel person, IFormFile Image)
         {
             try
             {
-                var delFile = await _personService.GetPersonById(person.Id, _configuration.GetConnectionString("PostgreSQLConnectionString"));
+                var delFile = await _personService.GetPersonById(Id, _configuration.GetConnectionString("PostgreSQLConnectionString"));
                 var delFilePath = delFile.PasportIMG;
                 string ipAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
                 string path = "";
@@ -87,8 +86,8 @@ namespace RegistryOffice.Rest.Controllers
                 {
                     await Image.CopyToAsync(fileStream);
                 }
-                person.PasportIMG = Path.Combine(path, Image.FileName);
-                var result = await _personService.UpdatePerson(person, delFilePath, _configuration.GetConnectionString("PostgreSQLConnectionString"));
+                var _person = new PersonModel { Id = Id, Address = person.Address, Children = person.Children, Citizenship = person.Citizenship, DateOfBirthday = person.DateOfBirthday, FullName = person.FullName, MaritalStatus = person.MaritalStatus, PhoneNumber = person.PhoneNumber, PasportIMG = Path.Combine(path, Image.FileName) };
+                var result = await _personService.UpdatePerson(_person, delFilePath, _configuration.GetConnectionString("PostgreSQLConnectionString"));
                 await _personService.SaveLog(ipAddress, $"Update person ({person.FullName})", _configuration.GetConnectionString("PostgreSQLConnectionString"));
                 return new PersonEntity(result.Id, result.FullName, result.DateOfBirthday, result.Address, result.Citizenship, result.Children, result.MaritalStatus, result.PhoneNumber, result.PasportIMG);
             }

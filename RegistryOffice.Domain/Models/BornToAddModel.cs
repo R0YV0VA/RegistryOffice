@@ -7,5 +7,5 @@ public class BornToAddModel
     public int ParentId2 { get; set; }
     public string BirthDate { get; set; }
     public string BirthPlace { get; set; }
-    public string BirthCertificateIMG { get; set; }
+    //public string BirthCertificateIMG { get; set; }
 }

@@ -51,7 +51,7 @@ public class PersonService : IPersonService
         }
         return _persons;
     }
-    public async Task<PersonModel> AddPerson(PersonToAddModel person, string connectionString)
+    public async Task<PersonModel> AddPerson(PersonToAddModel person, string PasportIMG, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
         await con.OpenAsync();
@@ -63,7 +63,7 @@ public class PersonService : IPersonService
         database.Parameters.AddWithValue("Children", person.Children);
         database.Parameters.AddWithValue("MaritalStatus", person.MaritalStatus);
         database.Parameters.AddWithValue("PhoneNumber", person.PhoneNumber);
-        database.Parameters.AddWithValue("PasportIMG", person.PasportIMG);
+        database.Parameters.AddWithValue("PasportIMG", PasportIMG);
         database.Parameters.AddWithValue("DateOfBirthday", person.DateOfBirthday);
         await database.PrepareAsync();
         using NpgsqlDataReader rdr = await database.ExecuteReaderAsync();

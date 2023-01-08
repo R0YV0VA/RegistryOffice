@@ -57,8 +57,7 @@ public class BornController : Controller
             {
                 await Image.CopyToAsync(fileStream);
             }
-            born.BirthCertificateIMG = Path.Combine(path, Image.FileName);
-            var result = await _bornService.AddBorn(born, _configuration.GetConnectionString("PostgreSQLConnectionString"));
+            var result = await _bornService.AddBorn(born, Path.Combine(path, Image.FileName), _configuration.GetConnectionString("PostgreSQLConnectionString"));
             await _bornService.SaveLog(ipAddress, $"Add born with id={result.Id}", _configuration.GetConnectionString("PostgreSQLConnectionString"));
             return new BornEntity(result.Id, result.FullName, result.ParentId1, result.ParentId2, result.BirthDate, result.BirthPlace, result.BirthCertificateIMG);
         }
@@ -70,11 +69,11 @@ public class BornController : Controller
     }
     [EnableCors("AllowAll")]
     [HttpPut]
-    public async Task<BornEntity> UpdateBorn([FromForm] BornModel born, IFormFile Image)
+    public async Task<BornEntity> UpdateBorn([FromForm]int Id, [FromForm]BornToAddModel born, IFormFile Image)
     {
         try
         {
-            var delFile = await _bornService.GetBornById(born.Id, _configuration.GetConnectionString("PostgreSQLConnectionString"));
+            var delFile = await _bornService.GetBornById(Id, _configuration.GetConnectionString("PostgreSQLConnectionString"));
             var delFilePath = delFile.BirthCertificateIMG;
             string ipAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
             string path = "";
@@ -87,8 +86,8 @@ public class BornController : Controller
             {
                 await Image.CopyToAsync(fileStream);
             }
-            born.BirthCertificateIMG = Path.Combine(path, Image.FileName);
-            var result = await _bornService.UpdateBorn(born, delFilePath, _configuration.GetConnectionString("PostgreSQLConnectionString"));
+            var _born = new BornModel { Id = Id, FullName = born.FullName, ParentId1 = born.ParentId1, ParentId2 = born.ParentId2, BirthDate = born.BirthDate, BirthPlace = born.BirthPlace, BirthCertificateIMG = Path.Combine(path, Image.FileName) };
+            var result = await _bornService.UpdateBorn(_born, delFilePath, _configuration.GetConnectionString("PostgreSQLConnectionString"));
             await _bornService.SaveLog(ipAddress, $"Update born with id={result.Id}", _configuration.GetConnectionString("PostgreSQLConnectionString"));
             return new BornEntity(result.Id, result.FullName, result.ParentId1, result.ParentId2, result.BirthDate, result.BirthPlace, result.BirthCertificateIMG);
         }

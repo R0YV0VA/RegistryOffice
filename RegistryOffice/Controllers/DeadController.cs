@@ -59,8 +59,7 @@ public class DeadController : Controller
             {
                 await Image.CopyToAsync(fileStream);
             }
-            dead.DeathCaseIMG = Path.Combine(path, Image.FileName);
-            var result = await _deadService.AddDead(dead, _configuration.GetConnectionString("PostgreSQLConnectionString"));
+            var result = await _deadService.AddDead(dead, Path.Combine(path, Image.FileName), _configuration.GetConnectionString("PostgreSQLConnectionString"));
             await _deadService.SaveLog(ipAddress, $"Add dead FullName={result.FullName}", _configuration.GetConnectionString("PostgreSQLConnectionString"));
             return new DeadEntity(result.Id, result.FullName, result.DeathCaseIMG);
         }
@@ -72,11 +71,11 @@ public class DeadController : Controller
     }
     [EnableCors("AllowAll")]
     [HttpPut]
-    public async Task<DeadEntity> UpdateDead([FromForm] DeadModel dead, IFormFile Image)
+    public async Task<DeadEntity> UpdateDead([FromForm]int Id, [FromForm]DeadToAddModel dead, IFormFile Image)
     {
         try
         {
-            var delFile = await _deadService.GetDeadById(dead.Id, _configuration.GetConnectionString("PostgreSQLConnectionString"));
+            var delFile = await _deadService.GetDeadById(Id, _configuration.GetConnectionString("PostgreSQLConnectionString"));
             var delFilePath = delFile.DeathCaseIMG;
             string ipAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
             string path = "";
@@ -89,8 +88,8 @@ public class DeadController : Controller
             {
                 await Image.CopyToAsync(fileStream);
             }
-            dead.DeathCaseIMG = Path.Combine(path, Image.FileName);
-            var result = await _deadService.UpdateDead(dead, delFilePath, _configuration.GetConnectionString("PostgreSQLConnectionString"));
+            var _dead = new DeadModel { Id = Id, FullName = dead.FullName, DeathCaseIMG = Path.Combine(path, Image.FileName) };
+            var result = await _deadService.UpdateDead(_dead, delFilePath, _configuration.GetConnectionString("PostgreSQLConnectionString"));
             await _deadService.SaveLog(ipAddress, $"Update dead FullName={dead.FullName}", _configuration.GetConnectionString("PostgreSQLConnectionString"));
             return new DeadEntity(result.Id, result.FullName, result.DeathCaseIMG);
         }

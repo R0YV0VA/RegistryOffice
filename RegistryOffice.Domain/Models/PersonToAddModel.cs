@@ -9,5 +9,5 @@ public class PersonToAddModel
     public int Children { get; set; }
     public bool MaritalStatus { get; set; }
     public string PhoneNumber { get; set; }
-    public string PasportIMG { get; set; } = "";
+    //public string PasportIMG { get; set; } = "";
 }

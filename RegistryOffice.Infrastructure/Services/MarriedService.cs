@@ -43,7 +43,7 @@ public class MarriedService : IMarriedService
         }
         return _marrieds;
     }
-    public async Task<MarriedModel> AddMarried(MarriedToAddModel married, string connectionString)
+    public async Task<MarriedModel> AddMarried(MarriedToAddModel married, string MarriageCertificateIMG, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
         await con.OpenAsync();
@@ -52,7 +52,7 @@ public class MarriedService : IMarriedService
         database.Parameters.AddWithValue("Person1Id", married.Person1Id);
         database.Parameters.AddWithValue("Person2Id", married.Person2Id);
         database.Parameters.AddWithValue("DateOfMarriage", married.DateOfMarriage);
-        database.Parameters.AddWithValue("MarriageCertificateIMG", married.MarriageCertificateIMG);
+        database.Parameters.AddWithValue("MarriageCertificateIMG", MarriageCertificateIMG);
         await database.PrepareAsync();
         using NpgsqlDataReader rdr = await database.ExecuteReaderAsync();
         var _married = new MarriedModel();

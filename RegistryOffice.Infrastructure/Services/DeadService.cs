@@ -39,14 +39,14 @@ public class DeadService : IDeadService
         }
         return _deads;
     }
-    public async Task<DeadModel> AddDead(DeadToAddModel dead, string connectionString)
+    public async Task<DeadModel> AddDead(DeadToAddModel dead, string DeathCaseIMG, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
         await con.OpenAsync();
         using var database = new NpgsqlCommand("INSERT INTO deads (id, full_name, death_case_img) VALUES (@Id, @FullName, @DeathCaseIMG) RETURNING *;", con);
         database.Parameters.AddWithValue("Id", generateID.getID());
         database.Parameters.AddWithValue("FullName", dead.FullName);
-        database.Parameters.AddWithValue("DeathCaseIMG", dead.DeathCaseIMG);
+        database.Parameters.AddWithValue("DeathCaseIMG", DeathCaseIMG);
         await database.PrepareAsync();
         using NpgsqlDataReader rdr = await database.ExecuteReaderAsync();
         var _dead = new DeadModel();

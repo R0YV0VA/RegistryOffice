@@ -48,7 +48,7 @@ public class BornService : IBornService
         }
         return borns;
     }
-    public async Task<BornModel> AddBorn(BornToAddModel born, string connectionString)
+    public async Task<BornModel> AddBorn(BornToAddModel born, string BirthCertificateIMG, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
         await con.OpenAsync();
@@ -59,7 +59,7 @@ public class BornService : IBornService
         database.Parameters.AddWithValue("ParentId2", born.ParentId2);
         database.Parameters.AddWithValue("BirthDate", born.BirthDate);
         database.Parameters.AddWithValue("BirthPlace", born.BirthPlace);
-        database.Parameters.AddWithValue("BirthCertificateIMG", born.BirthCertificateIMG);
+        database.Parameters.AddWithValue("BirthCertificateIMG", BirthCertificateIMG);
         await database.PrepareAsync();
         using NpgsqlDataReader rdr = await database.ExecuteReaderAsync();
         var _born = new BornModel();

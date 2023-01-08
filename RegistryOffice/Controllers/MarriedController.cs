@@ -59,8 +59,7 @@ public class MarriedController : Controller
             {
                 await Image.CopyToAsync(fileStream);
             }
-            married.MarriageCertificateIMG = Path.Combine(path, Image.FileName);
-            var result = await _marriedService.AddMarried(married, _configuration.GetConnectionString("PostgreSQLConnectionString"));
+            var result = await _marriedService.AddMarried(married, Path.Combine(path, Image.FileName), _configuration.GetConnectionString("PostgreSQLConnectionString"));
             await _marriedService.SaveLog(ipAddress, $"Add married Id={result.Id}", _configuration.GetConnectionString("PostgreSQLConnectionString"));
             return new MarriedEntity(result.Id, result.Person1Id, result.Person2Id, result.DateOfMarriage, result.MarriageCertificateIMG);
         }
@@ -72,11 +71,11 @@ public class MarriedController : Controller
     }
     [EnableCors("AllowAll")]
     [HttpPut]
-    public async Task<MarriedEntity> UpdateMarried([FromForm] MarriedModel married, IFormFile Image)
+    public async Task<MarriedEntity> UpdateMarried([FromForm]int Id, [FromForm]MarriedToAddModel married, IFormFile Image)
     {
         try
         {
-            var delFile = await _marriedService.GetMarriedById(married.Id, _configuration.GetConnectionString("PostgreSQLConnectionString"));
+            var delFile = await _marriedService.GetMarriedById(Id, _configuration.GetConnectionString("PostgreSQLConnectionString"));
             var delFilePath = delFile.MarriageCertificateIMG;
             string ipAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
             string path = "";
@@ -89,8 +88,8 @@ public class MarriedController : Controller
             {
                 await Image.CopyToAsync(fileStream);
             }
-            married.MarriageCertificateIMG = Path.Combine(path, Image.FileName);
-            var result = await _marriedService.UpdateMarried(married, delFilePath, _configuration.GetConnectionString("PostgreSQLConnectionString"));
+            var _married = new MarriedModel { Id = Id, DateOfMarriage = married.DateOfMarriage, Person1Id = married.Person1Id, Person2Id = married.Person2Id, MarriageCertificateIMG = Path.Combine(path, Image.FileName) };
+            var result = await _marriedService.UpdateMarried(_married, delFilePath, _configuration.GetConnectionString("PostgreSQLConnectionString"));
             await _marriedService.SaveLog(ipAddress, $"Update married Id={result.Id}", _configuration.GetConnectionString("PostgreSQLConnectionString"));
             return new MarriedEntity(result.Id, result.Person1Id, result.Person2Id, result.DateOfMarriage, result.MarriageCertificateIMG);
         }

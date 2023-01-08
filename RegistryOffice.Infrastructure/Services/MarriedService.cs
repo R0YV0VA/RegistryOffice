@@ -6,6 +6,7 @@ namespace RegistryOffice.Infrastructure.Services;
 
 public class MarriedService : IMarriedService
 {
+    private readonly GenerateID generateID = new GenerateID();
     public async Task<MarriedModel> GetMarriedById(int Id, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
@@ -46,7 +47,8 @@ public class MarriedService : IMarriedService
     {
         using var con = new NpgsqlConnection(connectionString);
         await con.OpenAsync();
-        using var database = new NpgsqlCommand("INSERT INTO marrieds (first_person_id, second_person_id, date_of_marriage, marriage_certificate_img) VALUES (@Person1Id, @Person2Id, @DateOfMarriage, @MarriageCertificateIMG) RETURNING *;", con);
+        using var database = new NpgsqlCommand("INSERT INTO marrieds (id, first_person_id, second_person_id, date_of_marriage, marriage_certificate_img) VALUES (@Id, @Person1Id, @Person2Id, @DateOfMarriage, @MarriageCertificateIMG) RETURNING *;", con);
+        database.Parameters.AddWithValue("Id", generateID.getID());
         database.Parameters.AddWithValue("Person1Id", married.Person1Id);
         database.Parameters.AddWithValue("Person2Id", married.Person2Id);
         database.Parameters.AddWithValue("DateOfMarriage", married.DateOfMarriage);
@@ -85,15 +87,15 @@ public class MarriedService : IMarriedService
             _married.DateOfMarriage = rdr.GetString(3);
             _married.MarriageCertificateIMG = rdr.GetString(4);
         }
-        try
+        if (File.Exists(impPathToDel))
         {
             File.Delete(impPathToDel);
             return _married;
         }
-        catch (Exception ex)
+        else
         {
-            Console.WriteLine(ex.Message);
-            return null;
+            Console.WriteLine($"File {impPathToDel} not exist.");
+            return _married;
         }
     }
     public async Task<MarriedModel> DeleteMarried(int Id, string connectionString)
@@ -111,22 +113,24 @@ public class MarriedService : IMarriedService
             _married.DateOfMarriage = rdr.GetString(3);
             _married.MarriageCertificateIMG = rdr.GetString(4);
         }
-        try
+        if (File.Exists(_married.MarriageCertificateIMG))
         {
             File.Delete(_married.MarriageCertificateIMG);
             return _married;
         }
-        catch (Exception ex)
+        else
         {
-            Console.WriteLine(ex.Message);
-            return null;
+            Console.WriteLine($"File {_married.MarriageCertificateIMG} not exist.");
+            _married.MarriageCertificateIMG = "File not exist";
+            return _married;
         }
     }
     public async Task<bool> SaveLog(string ip, string operation, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
         await con.OpenAsync();
-        using var database = new NpgsqlCommand("INSERT INTO logs (operation, timestamp) VALUES (@Operation, @Timestamp);", con);
+        using var database = new NpgsqlCommand("INSERT INTO logs (id, operation, timestamp) VALUES (@Id, @Operation, @Timestamp);", con);
+        database.Parameters.AddWithValue("Id", generateID.getID());
         database.Parameters.AddWithValue("Operation", ip + " - " + operation);
         database.Parameters.AddWithValue("Timestamp", DateTime.UtcNow);
         await database.PrepareAsync();

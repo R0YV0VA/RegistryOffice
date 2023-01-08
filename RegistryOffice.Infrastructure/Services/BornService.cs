@@ -6,6 +6,7 @@ namespace RegistryOffice.Infrastructure.Services;
 
 public class BornService : IBornService
 {
+    private readonly GenerateID generateID = new GenerateID();
     public async Task<BornModel> GetBornById(int Id, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
@@ -51,7 +52,8 @@ public class BornService : IBornService
     {
         using var con = new NpgsqlConnection(connectionString);
         await con.OpenAsync();
-        using var database = new NpgsqlCommand("INSERT INTO marrieds (full_name, first_parent_id, second_parent_id, birth_date, birth_place, birth_certificate_img) VALUES (@FullName, @ParentId1, @ParentId2, @BirthDate, @BirthPlace, @BirthCertificateIMG) RETURNING *;", con);
+        using var database = new NpgsqlCommand("INSERT INTO marrieds (id, full_name, first_parent_id, second_parent_id, birth_date, birth_place, birth_certificate_img) VALUES (@Id, @FullName, @ParentId1, @ParentId2, @BirthDate, @BirthPlace, @BirthCertificateIMG) RETURNING *;", con);
+        database.Parameters.AddWithValue("Id", generateID.getID());
         database.Parameters.AddWithValue("FullName", born.FullName);
         database.Parameters.AddWithValue("ParentId1", born.ParentId1);
         database.Parameters.AddWithValue("ParentId2", born.ParentId2);
@@ -98,15 +100,15 @@ public class BornService : IBornService
             _born.BirthPlace = rdr.GetString(5);
             _born.BirthCertificateIMG = rdr.GetString(6);
         }
-        try
+        if (File.Exists(impPathToDel))
         {
             File.Delete(impPathToDel);
             return _born;
         }
-        catch (Exception ex)
+        else
         {
-            Console.WriteLine(ex.Message);
-            return null;
+            Console.WriteLine($"File {impPathToDel} not exist.");
+            return _born;
         }
     }
     public async Task<BornModel> DeleteBorn(int Id, string connectionString)
@@ -128,22 +130,24 @@ public class BornService : IBornService
             _born.BirthPlace = rdr.GetString(5);
             _born.BirthCertificateIMG = rdr.GetString(6);
         }
-        try
+        if (File.Exists(_born.BirthCertificateIMG))
         {
             File.Delete(_born.BirthCertificateIMG);
             return _born;
         }
-        catch (Exception ex)
+        else
         {
-            Console.WriteLine(ex.Message);
-            return null;
+            Console.WriteLine($"File {_born.BirthCertificateIMG} not exist.");
+            _born.BirthCertificateIMG = "File not exist";
+            return _born;
         }
     }
     public async Task<bool> SaveLog(string ip, string operation, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
         await con.OpenAsync();
-        using var database = new NpgsqlCommand("INSERT INTO logs (operation, timestamp) VALUES (@Operation, @Timestamp);", con);
+        using var database = new NpgsqlCommand("INSERT INTO logs (id, operation, timestamp) VALUES (@Id, @Operation, @Timestamp);", con);
+        database.Parameters.AddWithValue("Id", generateID.getID());
         database.Parameters.AddWithValue("Operation", ip + " - " + operation);
         database.Parameters.AddWithValue("Timestamp", DateTime.UtcNow);
         await database.PrepareAsync();

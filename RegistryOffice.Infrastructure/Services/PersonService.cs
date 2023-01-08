@@ -1,13 +1,12 @@
 ﻿using Npgsql;
 using RegistryOffice.Application.Services;
 using RegistryOffice.Domain.Models;
-using System;
-using System.Net.Http;
 
 namespace RegistryOffice.Infrastructure.Services;
 
 public class PersonService : IPersonService
 {
+    private readonly GenerateID generateID = new GenerateID();
     public async Task<PersonModel> GetPersonById(int Id, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
@@ -56,7 +55,8 @@ public class PersonService : IPersonService
     {
         using var con = new NpgsqlConnection(connectionString);
         await con.OpenAsync();
-        using var database = new NpgsqlCommand("INSERT INTO persons (full_name, address, citizenship, children, marital_status, phone_number, pasport_img, date_of_birthday) VALUES (@FullName, @Address, @Citizenship, @Children, @MaritalStatus, @PhoneNumber, @PasportIMG, @DateOfBirthday) RETURNING *;", con);
+        using var database = new NpgsqlCommand("INSERT INTO persons (id, full_name, address, citizenship, children, marital_status, phone_number, pasport_img, date_of_birthday) VALUES (@Id, @FullName, @Address, @Citizenship, @Children, @MaritalStatus, @PhoneNumber, @PasportIMG, @DateOfBirthday) RETURNING *;", con);
+        database.Parameters.AddWithValue("Id", generateID.getID());
         database.Parameters.AddWithValue("FullName", person.FullName);       
         database.Parameters.AddWithValue("Address", person.Address);
         database.Parameters.AddWithValue("Citizenship", person.Citizenship);
@@ -111,15 +111,15 @@ public class PersonService : IPersonService
             _person.PasportIMG = rdr.GetString(7);
             _person.DateOfBirthday = rdr.GetString(8);
         }
-        try
+        if (File.Exists(impPathToDel))
         {
             File.Delete(impPathToDel);
             return _person;
         }
-        catch (Exception ex)
+        else
         {
-            Console.WriteLine(ex.Message);
-            return null;
+            Console.WriteLine($"File {impPathToDel} not exist.");
+            return _person;
         }
     }
     public async Task<PersonModel> DeletePerson(int Id, string connectionString)
@@ -141,22 +141,24 @@ public class PersonService : IPersonService
             _person.PasportIMG = rdr.GetString(7);
             _person.DateOfBirthday = rdr.GetString(8);
         }
-        try
+        if (File.Exists(_person.PasportIMG))
         {
             File.Delete(_person.PasportIMG);
             return _person;
         }
-        catch (Exception ex)
+        else
         {
-            Console.WriteLine(ex.Message);
-            return null;
+            Console.WriteLine($"File {_person.PasportIMG} not exist.");
+            _person.PasportIMG = "File not exist";
+            return _person;
         }
     }
     public async Task<bool> SaveLog(string ip, string operation, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
         await con.OpenAsync();
-        using var database = new NpgsqlCommand("INSERT INTO logs (operation, timestamp) VALUES (@Operation, @Timestamp);", con);
+        using var database = new NpgsqlCommand("INSERT INTO logs (id, operation, timestamp) VALUES (@Id, @Operation, @Timestamp);", con);
+        database.Parameters.AddWithValue("Id", generateID.getID());
         database.Parameters.AddWithValue("Operation", ip + " - " + operation);
         database.Parameters.AddWithValue("Timestamp", DateTime.UtcNow);
         await database.PrepareAsync();

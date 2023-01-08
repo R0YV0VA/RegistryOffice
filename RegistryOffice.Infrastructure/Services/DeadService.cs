@@ -6,6 +6,7 @@ namespace RegistryOffice.Infrastructure.Services;
 
 public class DeadService : IDeadService
 {
+    private readonly GenerateID generateID = new GenerateID();
     public async Task<DeadModel> GetDeadById(int Id, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
@@ -42,7 +43,8 @@ public class DeadService : IDeadService
     {
         using var con = new NpgsqlConnection(connectionString);
         await con.OpenAsync();
-        using var database = new NpgsqlCommand("INSERT INTO deads (full_name, death_case_img) VALUES (@FullName, @DeathCaseIMG) RETURNING *;", con);
+        using var database = new NpgsqlCommand("INSERT INTO deads (id, full_name, death_case_img) VALUES (@Id, @FullName, @DeathCaseIMG) RETURNING *;", con);
+        database.Parameters.AddWithValue("Id", generateID.getID());
         database.Parameters.AddWithValue("FullName", dead.FullName);
         database.Parameters.AddWithValue("DeathCaseIMG", dead.DeathCaseIMG);
         await database.PrepareAsync();
@@ -73,15 +75,15 @@ public class DeadService : IDeadService
             _dead.FullName = rdr.GetString(1);
             _dead.DeathCaseIMG = rdr.GetString(2);
         }
-        try
+        if (File.Exists(impPathToDel))
         {
             File.Delete(impPathToDel);
             return _dead;
         }
-        catch (Exception ex)
+        else
         {
-            Console.WriteLine(ex.Message);
-            return null;
+            Console.WriteLine($"File {impPathToDel} not exist.");
+            return _dead;
         }
     }
     public async Task<DeadModel> DeleteDead(int Id, string connectionString)
@@ -97,22 +99,24 @@ public class DeadService : IDeadService
             _dead.FullName = rdr.GetString(1);
             _dead.DeathCaseIMG = rdr.GetString(2);
         }
-        try
+        if (File.Exists(_dead.DeathCaseIMG))
         {
             File.Delete(_dead.DeathCaseIMG);
             return _dead;
         }
-        catch (Exception ex)
+        else
         {
-            Console.WriteLine(ex.Message);
-            return null;
+            Console.WriteLine($"File {_dead.DeathCaseIMG} not exist.");
+            _dead.DeathCaseIMG = "File not exist";
+            return _dead;
         }
     }
     public async Task<bool> SaveLog(string ip, string operation, string connectionString)
     {
         using var con = new NpgsqlConnection(connectionString);
         await con.OpenAsync();
-        using var database = new NpgsqlCommand("INSERT INTO logs (operation, timestamp) VALUES (@Operation, @Timestamp);", con);
+        using var database = new NpgsqlCommand("INSERT INTO logs (id, operation, timestamp) VALUES (@Id, @Operation, @Timestamp);", con);
+        database.Parameters.AddWithValue("Id", generateID.getID());
         database.Parameters.AddWithValue("Operation", ip + " - " + operation);
         database.Parameters.AddWithValue("Timestamp", DateTime.UtcNow);
         await database.PrepareAsync();
